@@ -3,8 +3,6 @@ import 'package:animated_book_widget/animated_book_widget.dart';
 
 
 class BookPage extends StatefulWidget {
-  const BookPage({super.key});
-
   @override
   _BookPageState createState() => _BookPageState();
 }
