@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-class BookPage extends StatefulWidget {
-  const BookPage({super.key});
+class BookPage3 extends StatefulWidget {
+  const BookPage3({super.key});
 
   @override
-  _BookPageState createState() => _BookPageState();
+  _BookPage3State createState() => _BookPage3State();
 }
 
-class _BookPageState extends State<BookPage>
+class _BookPage3State extends State<BookPage3>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   int _currentPage = -1; // -1 represents the front cover
-  bool _isForward = true;
-  bool _isCoverOpen = false;
+  bool _isForward = true; // To determine the direction of the flip
+  bool _isCoverOpen = false; // To check if cover is open
+  bool _isTurningPage = false; // To check if a page is currently turning
 
   final List<String> pageImages = [
-    'assets/images/emart.png',
-    'assets/images/img.png',
-    'assets/images/logo.jpg',
-    'assets/images/wait.png',
-    'assets/images/a.jpg',
-    'assets/images/emart.png',
-    'assets/images/emart.png',
-    'assets/images/img.png',
+    'assets/images/images (1).jpeg',
+    'assets/images/rock.png',
+    'assets/images/paper.png',
+    'assets/images/scissors.png',
+    'assets/images/1.jpeg',
+    'assets/images/1.jpg',
+    'assets/images/1.jpg',
+    'assets/images/1.jpg',
     'assets/images/logo.jpg',
     'assets/images/wait.png',
     'assets/images/a.jpg',
@@ -51,19 +52,26 @@ class _BookPageState extends State<BookPage>
   }
 
   void _turnPage(bool forward) {
+    // Don't turn if we're at the start or end of the book
     if ((_currentPage == 0 && !forward) ||
-        (_currentPage >= pageImages.length - 2 && forward)) {
-      return; // Don't turn if we're at the start or end of the book
+        (_currentPage >= pageImages.length - 1 && forward) ||
+        _isTurningPage) {
+      return;
     }
     setState(() {
       _isForward = forward;
+      _isTurningPage = true; // Set turning state
       if (forward) {
-        _currentPage += 2;
+        _currentPage++; // Move to next page
       } else {
-        _currentPage -= 2;
+        _currentPage--; // Move to previous page
       }
     });
-    _controller.forward(from: 0.0);
+    _controller.forward(from: 1.0).whenComplete(() {
+      setState(() {
+        _isTurningPage = false; // Reset turning state
+      });
+    });
   }
 
   void _openCover() {
@@ -86,31 +94,20 @@ class _BookPageState extends State<BookPage>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Realistic Book'),
+        title: const Text('My Animated Book'),
       ),
       body: Center(
-        child: Container(
+        child: SizedBox(
           width: 600,
           height: 400,
-          decoration: BoxDecoration(
-            color: Colors.brown[100],
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
           child: Stack(
             children: [
               if (!_isCoverOpen) _buildCover(true),
               if (_isCoverOpen) ...[
                 Row(
                   children: [
-                    Expanded(child: _buildPageContent(_currentPage + 1)),
                     Expanded(child: _buildPageContent(_currentPage)),
+                    Expanded(child: _buildPageContent(_currentPage + 1)),
                   ],
                 ),
                 AnimatedBuilder(
@@ -120,7 +117,7 @@ class _BookPageState extends State<BookPage>
                       alignment: Alignment.centerRight,
                       transform: Matrix4.identity()
                         ..setEntry(3, 2, 0.001)
-                        ..rotateY(-_controller.value * math.pi),
+                        ..rotateY(_isForward ? -_controller.value * math.pi : _controller.value * math.pi),
                       child: Row(
                         children: [
                           Expanded(
@@ -161,23 +158,13 @@ class _BookPageState extends State<BookPage>
             child: Container(
               width: 300,
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.centerLeft,
-                  end: Alignment.centerRight,
-                  colors: [Colors.brown[700]!, Colors.brown[600]!],
-                ),
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(10),
-                  bottomLeft: Radius.circular(10),
-                  topRight: Radius.circular(2),
-                  bottomRight: Radius.circular(2),
-                ),
-                boxShadow: [
+                color: Colors.brown[700],
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: const [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    spreadRadius: 2,
-                    blurRadius: 5,
-                    offset: const Offset(0, 3),
+                    color: Colors.black26,
+                    blurRadius: 10,
+                    offset: Offset(0, 5),
                   ),
                 ],
               ),
@@ -211,63 +198,41 @@ class _BookPageState extends State<BookPage>
     }
 
     return GestureDetector(
-      onTap: () => _turnPage(index % 2 == 0),
+      onTap: () {
+        // Call _turnPage with true for right tap (next page) or false for left tap (previous page)
+        _turnPage(index == _currentPage + 1);
+      },
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
           image: DecorationImage(
             image: AssetImage(pageImages[index]),
             fit: BoxFit.cover,
           ),
-          borderRadius: BorderRadius.circular(2),
-          boxShadow: [
+          borderRadius: BorderRadius.circular(10),
+          boxShadow: const [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
-              spreadRadius: 1,
-              blurRadius: 3,
-              offset: const Offset(0, 2),
+              color: Colors.black26,
+              blurRadius: 5,
+              offset: Offset(0, 2),
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Positioned(
-              top: 0,
-              bottom: 0,
-              right: 0,
-              width: 20,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.centerLeft,
-                    end: Alignment.centerRight,
-                    colors: [
-                      Colors.white.withOpacity(0),
-                      Colors.black.withOpacity(0.1)
-                    ],
-                  ),
-                ),
+        child: Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Text(
+                'Page ${index + 1}',
+                style: const TextStyle(color: Colors.white),
               ),
             ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(15),
-                  ),
-                  child: Text(
-                    'Page ${index + 1}',
-                    style: const TextStyle(color: Colors.white),
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
